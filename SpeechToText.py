@@ -5,8 +5,11 @@ from google.cloud.speech_v2 import SpeechClient
 from google.cloud.speech_v2.types import cloud_speech as cloud_speech_types
 
 # --- 1. CONFIGURATION ---
+from dotenv import load_dotenv
+load_dotenv()
+
 # Ensure your credentials.json is in the same folder
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "credentials.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 PROJECT_ID = "bearhacks-2026"  # <--- UPDATE THIS
 LOCATION = "northamerica-northeast1"

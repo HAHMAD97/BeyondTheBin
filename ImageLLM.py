@@ -4,10 +4,18 @@ import json
 from google import genai
 from google.genai import types
 from pydantic import BaseModel  # Used for structured output
+from dotenv import load_dotenv # For loading API keys from .env
 
 # --- CONFIGURATION ---
 MODEL_ID = "gemma-4-26b-a4b-it"
-client = genai.Client(api_key="")
+
+load_dotenv()
+API_KEY = os.getenv("GEMMA_KEY")
+
+client = genai.Client(api_key=API_KEY)
+
+if not API_KEY:
+    raise ValueError("GEMMA_KEY not found in .env file")
 
 
 # 1. Define the Structured Response Format
