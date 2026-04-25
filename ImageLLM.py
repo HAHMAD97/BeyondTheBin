@@ -82,7 +82,7 @@ def judge_item(image_path):
         "- LARGE ITEMS: Furniture, tires, construction waste, wood, heavy metals.\n\n"
 
         "=== [ACCIDENTAL] ===\n"
-        "- If the image is just a person, a hand, an empty room, or blurry floor, set bin to 'accidental'.\n\n"
+        "- If the image has NO item in screen, or is JUST a person with no items. Set bin to 'accidental'.\n\n"
 
         "Your response MUST be in valid JSON format matching the requested schema. "
         "If an item is recyclable but dirty (e.g., a jar full of peanut butter), set processing_required: true and tell them to wash it."
