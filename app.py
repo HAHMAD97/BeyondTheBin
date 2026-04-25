@@ -1,18 +1,47 @@
 from ImageLLM import classify_current_item
 from SpeechToText import listen_once
-
-MAX_ARGUMENTS = 4  # threshold before AI gives up
+import os
+import numpy as np
+import sounddevice as sd
 
 from google import genai
-import os
+from google.genai import types
+from elevenlabs.client import ElevenLabs
+
+
+# ---------------- CONFIG ----------------
+MAX_ARGUMENTS = 4
+MODEL_ID = "gemma-4-26b-a4b-it"
 
 client = genai.Client(api_key=os.getenv("GEMMA_KEY"))
+tts_client = ElevenLabs(api_key=os.getenv("ELEVENLABS_KEY"))
 
 
+# ---------------- TTS ----------------
+def speak(text):
+    audio_stream = tts_client.text_to_speech.convert(
+        text=text,
+        voice_id="CObk84upvxmLAIoMXgyH",
+        model_id="eleven_multilingual_v2",
+        output_format="pcm_16000"
+    )
+
+    audio_bytes = b"".join(audio_stream)
+    audio_np = np.frombuffer(audio_bytes, dtype=np.int16)
+
+    sd.play(audio_np, samplerate=16000)
+    sd.wait()
+
+
+# ---------------- OUTPUT WRAPPER ----------------
+def say(text, tts=True):
+    print(f"TRASHCAN: {text}")
+    if tts:
+        speak(text)
+
+
+# ---------------- LLM ----------------
 def respond_to_user(item_data, user_input):
-    """
-    Uses LLM to reply to user.
-    """
 
     prompt = f"""
 You are a grumpy AI smart trash can in Toronto (2026).
@@ -27,46 +56,49 @@ User says:
 "{user_input}"
 
 Rules:
-- Be consistent with your original decision
-- BUT you MUST explain your reasoning when asked (especially "why")
-- If user asks "why is it toxic / wrong / e-waste", explain clearly
-- Keep personality: grumpy, sarcastic, slightly annoyed
-- Do NOT just repeat the same sentence
-- Keep response under 4 sentences
+- Be consistent with your decision
+- If asked "why", explain clearly
+- Do NOT repeat yourself
+- Be sarcastic, grumpy, short (max 4 sentences)
 """
 
     response = client.models.generate_content(
-        model="gemma-4-26b-a4b-it",
+        model=MODEL_ID,
         contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.6,
+            max_output_tokens=120
+        )
     )
 
     return response.text
 
 
+# ---------------- MAIN LOOP ----------------
 def run_trashcan_ai():
-    print("Smart Trashcan Booting...\n")
+
+    say("Smart Trashcan Booting...")
 
     item = classify_current_item()
 
     if not item:
-        print("Could not classify item.")
+        say("Could not classify item.", tts=False)
         return
 
-    print("\nTRASHCAN SAYS:")
-    print(item.sass)
-    print(f"BIN: {item.bin.upper()}\n")
+    say("Analysis complete.")
+    say(item.sass)
+    say(f"Bin classification: {item.bin}")
 
-    # CASE 1: TRASH → END EARLY
     if item.bin.lower() == "trash":
-        print("Trash detected, opening!")
+        say("Trash detected. Opening!")
         return
 
-    # Otherwise: start argument loop
+    say("Listening for user response...")
+
     argument_count = 0
 
-    print("Listening for user response...\n")
-
     while argument_count < MAX_ARGUMENTS:
+
         user_text = listen_once()
 
         if not user_text:
@@ -74,20 +106,22 @@ def run_trashcan_ai():
 
         print(f"\nUSER: {user_text}")
 
+        say("Processing input...", tts=False)
+
         response = respond_to_user(item, user_text)
 
-        print(f"TRASHCAN: {response}\n")
+        say(response)
 
-        # Simple escalation logic
-        if any(word in user_text for word in ["stop", "fine", "ok", "whatever"]):
-            print("TRASHCAN: Conversation terminated. Don't test me again.")
+        if any(word in user_text.lower() for word in ["stop", "fine", "ok", "whatever"]):
+            say("Conversation terminated. Don't test me again.")
             break
 
         argument_count += 1
 
     if argument_count >= MAX_ARGUMENTS:
-        print("TRASHCAN: I've repeated myself 4 times. I’m done arguing.")
+        say("I've repeated myself too many times. I'm done arguing.")
 
 
+# ---------------- ENTRY ----------------
 if __name__ == "__main__":
     run_trashcan_ai()
