@@ -1,6 +1,5 @@
 import os
 import cv2
-import json
 from google import genai
 from google.genai import types
 from pydantic import BaseModel  # Used for structured output
@@ -26,21 +25,21 @@ class WasteResponse(BaseModel):
 
 
 def take_photo(filename="current_item.jpg"):
-    print("📸 Snapping photo...")
+    print("Snapping photo...")
     cap = cv2.VideoCapture(0)
     for _ in range(5): cap.read()  # Warm up
     ret, frame = cap.read()
     if ret:
         cv2.imwrite(filename, frame)
-        print("📸 Photo saved!")
+        print("Photo saved!")
     else:
-        print("❌ Failed to grab frame.")
+        print("Failed to grab frame.")
     cap.release()
     return filename
 
 
 def judge_item(image_path):
-    print("🧠 Analyzing waste based on Toronto 2026 Rules...")
+    print("Analyzing waste based on Toronto 2026 Rules...")
 
     # Upload the image
     uploaded_file = client.files.upload(file=image_path)
@@ -75,7 +74,7 @@ def judge_item(image_path):
         "- TEXTILES & MISC: Unwanted clothing/shoes, sponges, dryer lint, incandescent bulbs, candles, cooled ashes, crystal/silica kitty litter.\n"
         "- PPE: Disposable masks, latex gloves, COVID-19 rapid test kits.\n\n"
 
-        "===[REJECTED] (Requires Drop-Off / Hazardous / Special) ===\n"
+        "=== [REJECTED] (Requires Drop-Off / Hazardous / Special) ===\n"
         "- BATTERIES: AA, AAA, Lithium-ion, car batteries, power tool batteries.\n"
         "- ELECTRONICS: Cell phones, laptops, cables, vapes/e-cigarettes, appliances, smoke alarms.\n"
         "- HAZARDOUS (HHW): Paint, motor oil, bleach, pesticides, pressurized propane/helium tanks, lighters with fluid.\n"
@@ -109,21 +108,24 @@ def judge_item(image_path):
     return response.parsed
 
 
-# --- Main Logic ---
-if __name__ == "__main__":
+def classify_current_item():
     img_path = take_photo()
 
-    if os.path.exists(img_path):
-        try:
-            data = judge_item(img_path)
+    if not os.path.exists(img_path):
+        return None
 
-            print(f"\n=== {data.sass.upper()} ===")
-            print(f"Decision: {data.bin.upper()}")
-            print(f"Processing Needed: {data.processing_required}")
+    try:
+        data = judge_item(img_path)
+        #print(f"\n=== {data.sass.upper()} ===")
+        #print(f"Decision: {data.bin.upper()}")
+        #print(f"Processing Needed: {data.processing_required}")
+        return data
+    except Exception as e:
+        print(f"Error parsing AI response: {e}")
+        return None
 
-            # Here is where you would send commands to your Arduino:
-            # if data.bin == "recycling" and not data.processing_required:
-            #     arduino.write(b'R')
 
-        except Exception as e:
-            print(f"Error parsing AI response: {e}")
+# --- Main Logic ---
+if __name__ == "__main__":
+    result = classify_current_item()
+    print(result)

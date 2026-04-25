@@ -1,25 +1,28 @@
 import os
 import queue
 import sounddevice as sd
+from dotenv import load_dotenv
+
 from google.cloud.speech_v2 import SpeechClient
 from google.cloud.speech_v2.types import cloud_speech as cloud_speech_types
 
-# --- 1. CONFIGURATION ---
-from dotenv import load_dotenv
+# -----------------------------
+# ENV SETUP
+# -----------------------------
 load_dotenv()
-
-# Ensure your credentials.json is in the same folder
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-PROJECT_ID = "bearhacks-2026"  # <--- UPDATE THIS
+PROJECT_ID = "bearhacks-2026"
 LOCATION = "northamerica-northeast1"
 RECOGNIZER_ID = "smart-trashcan"
 
-# This must match your "smart-trashcan" recognizer settings
 RATE = 16000
-CHUNK = int(RATE / 10)  # 100ms chunks
+CHUNK = int(RATE / 10)
 
 
+# -----------------------------
+# MICROPHONE STREAM HANDLER
+# -----------------------------
 class MicStream:
     def __init__(self):
         self.buffer = queue.Queue()
@@ -32,24 +35,29 @@ class MicStream:
     def generator(self):
         while True:
             chunk = self.buffer.get()
-            if chunk is None: return
+            if chunk is None:
+                return
             yield chunk
 
 
-def main():
-    # 2. POINT TO THE MONTREAL ENDPOINT
-    # If we don't set the api_endpoint, it defaults to 'global' and fails
+# -----------------------------
+# MAIN FUNCTION YOU IMPORT
+# -----------------------------
+def listen_once():
+    """
+    Listens to the microphone until it gets a FINAL transcript.
+    Returns the recognized speech as a string.
+    """
+
     client_options = {"api_endpoint": f"{LOCATION}-speech.googleapis.com"}
     client = SpeechClient(client_options=client_options)
 
-    # 3. CONSTRUCT THE RESOURCE PATH
-    recognizer_path = f"projects/{PROJECT_ID}/locations/{LOCATION}/recognizers/{RECOGNIZER_ID}"
+    recognizer_path = (
+        f"projects/{PROJECT_ID}/locations/{LOCATION}/recognizers/{RECOGNIZER_ID}"
+    )
 
-    # Configuration for the stream
-    # Note: Since the recognizer already has the model/language, we just need the streaming config
     streaming_config = cloud_speech_types.StreamingRecognitionConfig(
         config=cloud_speech_types.RecognitionConfig(
-            # Optional: Overriding features like punctuation if you didn't set them in Console
             features=cloud_speech_types.RecognitionFeatures(
                 enable_automatic_punctuation=True,
             )
@@ -58,43 +66,39 @@ def main():
 
     mic = MicStream()
 
-    # 4. START THE MICROPHONE
-    # Note: dtype='int16' matches LINEAR16 encoding
-    with sd.RawInputStream(samplerate=RATE, blocksize=CHUNK, dtype='int16',
-                           channels=1, callback=mic.callback):
-
-        print(f"--- Listening (Montreal Region: {LOCATION}) ---")
+    with sd.RawInputStream(
+        samplerate=RATE,
+        blocksize=CHUNK,
+        dtype="int16",
+        channels=1,
+        callback=mic.callback,
+    ):
 
         def request_generator():
-            # Initial request: Setup
+            # First request = config
             yield cloud_speech_types.StreamingRecognizeRequest(
                 recognizer=recognizer_path,
                 streaming_config=streaming_config,
             )
-            # Subsequent requests: Audio data
+
+            # Audio stream
             for audio_chunk in mic.generator():
                 yield cloud_speech_types.StreamingRecognizeRequest(audio=audio_chunk)
 
-        # 5. STREAM TO GOOGLE
         responses = client.streaming_recognize(requests=request_generator())
 
-        try:
-            for response in responses:
-                for result in response.results:
-                    transcript = result.alternatives[0].transcript
+        for response in responses:
+            for result in response.results:
+                if result.is_final:
+                    return result.alternatives[0].transcript.lower()
 
-                    if result.is_final:
-                        print(f"\n[MESSAGE]: {transcript}")
-                        # -------------------------------------------------------
-                        # HACKATHON GOAL: Send 'transcript' to LLM here!
-                        # -------------------------------------------------------
-                    else:
-                        # Print interim results (overwriting the same line)
-                        print(f"[HEARING]: {transcript}", end="\r")
-
-        except Exception as e:
-            print(f"\nError: {e}")
+    return None
 
 
+# -----------------------------
+# TEST
+# -----------------------------
 if __name__ == "__main__":
-    main()
+    print("Listening...")
+    text = listen_once()
+    print(f"You said: {text}")
