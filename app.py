@@ -8,7 +8,6 @@ from google import genai
 from google.genai import types
 from elevenlabs.client import ElevenLabs
 
-
 # ---------------- CONFIG ----------------
 MAX_ARGUMENTS = 4
 MODEL_ID = "gemma-4-26b-a4b-it"
@@ -16,9 +15,12 @@ MODEL_ID = "gemma-4-26b-a4b-it"
 client = genai.Client(api_key=os.getenv("GEMMA_KEY"))
 tts_client = ElevenLabs(api_key=os.getenv("ELEVENLABS_KEY"))
 
-
 # ---------------- TTS ----------------
 def speak(text):
+    """
+    Converts text to speech and plays it.
+    (Still blocking, but optimized slightly)
+    """
     audio_stream = tts_client.text_to_speech.convert(
         text=text,
         voice_id="CObk84upvxmLAIoMXgyH",
@@ -59,7 +61,7 @@ Rules:
 - Be consistent with your decision
 - If asked "why", explain clearly
 - Do NOT repeat yourself
-- Be sarcastic, grumpy, short (max 4 sentences)
+- Be grumpy, short (max 4 sentences)
 """
 
     response = client.models.generate_content(
@@ -78,7 +80,7 @@ Rules:
 def run_trashcan_ai():
 
     say("Smart Trashcan Booting...")
-
+    
     item = classify_current_item()
 
     if not item:
@@ -88,7 +90,11 @@ def run_trashcan_ai():
     say("Analysis complete.")
     say(item.sass)
     say(f"Bin classification: {item.bin}")
+    
+    if item.bin.lower() == "accidental":
+        return
 
+    # If trash → no need for argument system
     if item.bin.lower() == "trash":
         say("Trash detected. Opening!")
         return
@@ -99,19 +105,24 @@ def run_trashcan_ai():
 
     while argument_count < MAX_ARGUMENTS:
 
+        # STT (blocking but necessary)
         user_text = listen_once()
 
         if not user_text:
-            continue
+            break
 
         print(f"\nUSER: {user_text}")
 
-        say("Processing input...", tts=False)
+        # small UX improvement (no TTS delay here)
+        print("TRASHCAN: Processing input...")
 
+        # LLM call
         response = respond_to_user(item, user_text)
 
+        # speak response
         say(response)
 
+        # exit conditions
         if any(word in user_text.lower() for word in ["stop", "fine", "ok", "whatever"]):
             say("Conversation terminated. Don't test me again.")
             break
