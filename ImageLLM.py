@@ -35,11 +35,13 @@ def take_photo(filename="current_item.jpg"):
     else:
         print("Failed to grab frame.")
     cap.release()
+    print("after release")
     return filename
 
 
 def judge_item(image_path):
     # Upload the image
+    print("start upload")
     uploaded_file = client.files.upload(file=image_path)
     print("starting judge")
     # 2. System Instructions with Toronto 2026 Rules integration
