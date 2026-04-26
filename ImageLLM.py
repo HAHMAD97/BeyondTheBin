@@ -4,6 +4,7 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel  # Used for structured output
 from dotenv import load_dotenv # For loading API keys from .env
+from PIL import Image
 
 # --- CONFIGURATION ---
 MODEL_ID = "gemma-4-26b-a4b-it"
@@ -42,7 +43,7 @@ def take_photo(filename="current_item.jpg"):
 def judge_item(image_path):
     # Upload the image
     print("start upload")
-    uploaded_file = client.files.upload(file=image_path)
+    img = Image.open(image_path)
     print("starting judge")
     # 2. System Instructions with Toronto 2026 Rules integration
     persona = (
@@ -92,7 +93,7 @@ def judge_item(image_path):
     response = client.models.generate_content(
         model=MODEL_ID,
         contents=[
-            uploaded_file,
+            img,
             "What is this item and where does it go?"
         ],
         config=types.GenerateContentConfig(
