@@ -25,11 +25,11 @@ DELAY = 0.0008
 
 # Distance sensor setup
 distance_sensor = trash_distance_sensor(
-    echo_pin=17,
-    trigger_pin=25,
-    target_cm=50,
-    tolerance_cm=10,
-    hold_seconds=2,
+    echo_pin=20,
+    trigger_pin=21,
+    target_cm=20,
+    tolerance_cm=5,
+    hold_seconds=1,
 )
 
 
