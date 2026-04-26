@@ -245,18 +245,24 @@ async def run_trashcan_ai():
         await say("Could not classify item.", tts=False)
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
         return
+    else:
+        if item.bin.upper() == "ACCIDENTAL" or item.bin.upper() == "REJECTED":
+            await play_audio_file("trash_uncertain_edit.mp3")
+        elif item.bin.upper() == "TRASH":
+            await play_audio_file("good_trash_edit.mp3")
+        else:
+            await play_audio_file("recycling_trash.mp3")
+
     await say(f'Analysis complete. Bin classification "{item.bin}"')
 
+    await say(item.sass)
+
     if item.bin.upper() == "ACCIDENTAL":
-        await play_audio_file("trash_uncertain_edit.mp3")
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
         return
 
     if item.bin.upper() == "TRASH":
-        # Talk IN THE BACKGROUND while motor moves
-        await play_audio_file("good_trash_edit.mp3")
-        await say("Trash detected. Opening!")
-        
+        await say("Now Opening Lid!")
 
         await asyncio.to_thread(move_steps, -STEPS, DELAY)
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
@@ -266,7 +272,6 @@ async def run_trashcan_ai():
         await asyncio.to_thread(move_steps, STEPS, DELAY)
         return
 
-    await say(item.sass)
     await say("Do you have anything to say about that?")
     
     argument_count = 0
