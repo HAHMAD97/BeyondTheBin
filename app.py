@@ -10,7 +10,7 @@ from elevenlabs.client import ElevenLabs
 
 from MotorManual import move_motor
 
-from DistanceDetection import TrashDistanceSensor
+from DistanceDetection import trash_distance_sensor
 
 # ---------------- CONFIG ----------------
 MAX_ARGUMENTS = 4
@@ -24,7 +24,7 @@ DIRECTION = "forward"
 DELAY = 0.0008
 
 # Distance sensor setup
-distance_sensor = TrashDistanceSensor(
+distance_sensor = trash_distance_sensor(
     echo_pin=17,
     trigger_pin=25,
     target_cm=50,

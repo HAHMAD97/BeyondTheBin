@@ -53,23 +53,23 @@ def move_steps(n, delay=0.0008):
         pin.off()
 
 try:
-    print("--- Stepper Control Loaded ---")
-    print("Enter a positive number for Forward (e.g. 2000)")
-    print("Enter a negative number for Reverse (e.g. -2000)")
-    print("Press Ctrl+C to exit.")
-    print("Tip: 4096 steps is roughly one full rotation.")
+    # print("--- Stepper Control Loaded ---")
+    # print("Enter a positive number for Forward (e.g. 2000)")
+    # print("Enter a negative number for Reverse (e.g. -2000)")
+    # print("Press Ctrl+C to exit.")
+    # print("Tip: 4096 steps is roughly one full rotation.")
 
     while True:
-        user_input = input("\nSteps to move: ")
+        # user_input = input("\nSteps to move: ")
         
         try:
-            steps = int(user_input)
+            #steps = int(user_input)
             move_steps(steps)
         except ValueError:
             print("Please enter a valid whole number (integer).")
 
-except KeyboardInterrupt:
-    print("\nScript stopped by user.")
+# except KeyboardInterrupt:
+#     print("\nScript stopped by user.")
 
 finally:
     # Cleanup
