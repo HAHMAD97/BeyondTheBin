@@ -8,7 +8,7 @@ from google import genai
 from google.genai import types
 from elevenlabs.client import ElevenLabs
 
-from MotorTest import move_motor
+from MotorManual import move_motor
 
 from DistanceDetection import TrashDistanceSensor
 
