@@ -10,7 +10,7 @@ from time import sleep
 
 from ImageLLM import classify_current_item
 from SpeechToText import listen_once
-from MotorManual import move_steps
+from gpiozero import OutputDevice
 from DistanceDetection import trash_distance_sensor
 
 from google import genai
@@ -261,6 +261,56 @@ async def run_trashcan_ai():
         await say("I've repeated myself too many times. I'm done arguing.")
 
     await asyncio.to_thread(distance_sensor.wait_for_item_removed)
+
+in1 = OutputDevice(22)
+in2 = OutputDevice(27)
+in3 = OutputDevice(24)
+in4 = OutputDevice(23)
+step_pins = [in1, in2, in3, in4]
+
+sequence = [
+    (1, 0, 0, 0), (1, 1, 0, 0), (0, 1, 0, 0), (0, 1, 1, 0),
+    (0, 0, 1, 0), (0, 0, 1, 1), (0, 0, 0, 1), (1, 0, 0, 1)
+]
+
+# Track the current position in the sequence globally
+# This prevents jerking when switching directions
+state = {"index": 0}
+
+def move_steps(n, delay=0.002):
+    """
+    n: positive for forward, negative for reverse
+    delay: speed of rotation
+    """
+    if n == 0:
+        return
+
+    # Determine direction
+    step_dir = 1 if n > 0 else -1
+    total_steps = abs(n)
+
+    print(f"Moving {n} steps...")
+
+    for _ in range(total_steps):
+        # Update the global sequence index
+        state["index"] = (state["index"] + step_dir) % 8
+
+        step_data = sequence[state["index"]]
+
+        # Apply the step to pins
+        for i in range(4):
+            if step_data[i] == 1:
+                step_pins[i].on()
+            else:
+                step_pins[i].off()
+
+        sleep(delay)
+
+    # Optional: Turn pins off after moving to save power/heat
+    # Note: Turning them off reduces "holding torque" (the motor can be spun by hand)
+    for pin in step_pins:
+        pin.off()
+
 
 
 # ---------------- ENTRY ----------------
