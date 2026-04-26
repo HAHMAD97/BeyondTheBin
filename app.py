@@ -37,6 +37,8 @@ distance_sensor = trash_distance_sensor(
     hold_seconds=1,
 )
 
+sd.default.latency = 'high'
+sd.default.blocksize = 4096
 
 # ---------------- DATA CLASSES ----------------
 @dataclass
@@ -223,7 +225,7 @@ async def run_trashcan_ai():
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
         return
 
-    if item.bin.upper() == "TRASH" or True:
+    if item.bin.upper() == "TRASH":
         # Talk IN THE BACKGROUND while motor moves
         await say("Trash detected. Opening!")
 
