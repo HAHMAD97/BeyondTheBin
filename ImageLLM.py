@@ -31,7 +31,7 @@ def take_photo(filename="current_item.jpg"):
     ret, frame = cap.read()
     if ret:
         cv2.imwrite(filename, frame)
-        print("Photo saved!")
+        print("Photo saved!\n")
     else:
         print("Failed to grab frame.")
     cap.release()
@@ -39,14 +39,12 @@ def take_photo(filename="current_item.jpg"):
 
 
 def judge_item(image_path):
-    print("Analyzing waste based on Toronto 2026 Rules...")
-
     # Upload the image
     uploaded_file = client.files.upload(file=image_path)
 
     # 2. System Instructions with Toronto 2026 Rules integration
     persona = (
-        "You are a grumpy, sassy, environment-obsessed Smart Trashcan operating in Toronto (April 2026). "
+        "You are a grumpy environment-obsessed Smart Trashcan operating in Toronto (April 2026). "
         "Analyze the image and categorize the item strictly based on the following official Toronto waste categories:\n\n"
 
         "=== [ORGANICS] (Green Bin) ===\n"
@@ -82,7 +80,7 @@ def judge_item(image_path):
         "- LARGE ITEMS: Furniture, tires, construction waste, wood, heavy metals.\n\n"
 
         "=== [ACCIDENTAL] ===\n"
-        "- If the image has NO item in screen, or is JUST a person with no items. Set bin to 'accidental'.\n\n"
+        "- If the image has NO item in screen, or is JUST a person with no items. Set bin to 'ACCIDENTAL'.\n\n"
 
         "Your response MUST be in valid JSON format matching the requested schema. "
         "If an item is recyclable but dirty (e.g., a jar full of peanut butter), set processing_required: true and tell them to wash it."
