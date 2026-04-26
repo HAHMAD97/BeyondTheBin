@@ -6,9 +6,9 @@ class trash_distance_sensor:
         self,
         echo_pin=20,
         trigger_pin=21,
-        target_cm=50,
-        tolerance_cm=10,
-        hold_seconds=2,
+        target_cm=20,
+        tolerance_cm=5,
+        hold_seconds=1,
     ):
         self.sensor = DistanceSensor(echo=echo_pin, trigger=trigger_pin)
         self.target_cm = target_cm
