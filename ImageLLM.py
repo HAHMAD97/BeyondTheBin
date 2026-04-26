@@ -41,7 +41,7 @@ def take_photo(filename="current_item.jpg"):
 def judge_item(image_path):
     # Upload the image
     uploaded_file = client.files.upload(file=image_path)
-
+    print("starting judge")
     # 2. System Instructions with Toronto 2026 Rules integration
     persona = (
         "You are a grumpy environment-obsessed Smart Trashcan operating in Toronto (April 2026). "
@@ -102,6 +102,7 @@ def judge_item(image_path):
         )
     )
 
+    print("judge finished")
     # Parse the JSON response
     return response.parsed
 
@@ -114,9 +115,6 @@ def classify_current_item():
 
     try:
         data = judge_item(img_path)
-        #print(f"\n=== {data.sass.upper()} ===")
-        #print(f"Decision: {data.bin.upper()}")
-        #print(f"Processing Needed: {data.processing_required}")
         return data
     except Exception as e:
         print(f"Error parsing AI response: {e}")

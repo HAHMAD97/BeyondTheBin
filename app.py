@@ -105,8 +105,6 @@ Rules:
 
 # ---------------- MAIN LOOP ----------------
 async def run_trashcan_ai():
-    await say("Waiting for item...", tts=False)
-
     # Push blocking sensor read to a thread
     await asyncio.to_thread(distance_sensor.wait_for_item)
 
@@ -170,11 +168,12 @@ async def run_trashcan_ai():
     # Prevent same item from instantly triggering the next loop
     await asyncio.to_thread(distance_sensor.wait_for_item_removed)
 
+    await say("Waiting for item...", tts=False)
+
 
 # ---------------- ENTRY ----------------
 async def main():
     # Wait=False so it can boot up other tasks if needed while talking
-    await say("Smart Trashcan Booting...", wait=False)
     await say("Place an item in front of me and I'll tell you where it goes!")
 
     try:
