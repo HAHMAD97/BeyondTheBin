@@ -64,7 +64,7 @@ try:
         
         try:
             #steps = int(user_input)
-            move_steps(steps)
+            move_steps(n)
         except ValueError:
             print("Please enter a valid whole number (integer).")
 
