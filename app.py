@@ -32,9 +32,9 @@ DELAY = 0.002
 distance_sensor = trash_distance_sensor(
     echo_pin=20,
     trigger_pin=21,
-    target_cm=20,
-    tolerance_cm=5,
-    hold_seconds=1,
+    target_cm=25,
+    tolerance_cm=15,
+    hold_seconds=1.5,
 )
 
 sd.default.latency = 'high'
