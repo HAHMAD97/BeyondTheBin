@@ -6,6 +6,7 @@ import asyncio
 import threading
 import queue
 from dataclasses import dataclass
+from time import sleep
 
 from ImageLLM import classify_current_item
 from SpeechToText import listen_once
@@ -23,9 +24,9 @@ MODEL_ID = "gemma-4-26b-a4b-it"
 client = genai.Client(api_key=os.getenv("GEMMA_KEY"))
 tts_client = ElevenLabs(api_key=os.getenv("ELEVENLABS_KEY"))
 
-STEPS = 2048  # 180 degrees
+STEPS = 1024  # 180 degrees
 DIRECTION = "forward"
-DELAY = 0.0008
+DELAY = 0.001
 
 # Distance sensor setup
 distance_sensor = trash_distance_sensor(
@@ -222,12 +223,16 @@ async def run_trashcan_ai():
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
         return
 
-    if item.bin.upper() == "TRASH":
+    if item.bin.upper() == "TRASH" || True:
         # Talk IN THE BACKGROUND while motor moves
         await say("Trash detected. Opening!")
 
-        await asyncio.to_thread(move_steps, STEPS, DIRECTION, DELAY)
+        await asyncio.to_thread(move_steps, STEPS, DELAY)
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
+
+        sleep(5)
+
+        await asyncio.to_thread(move_steps, -STEPS, DELAY)
         return
 
     await say("Do you have anything to say about that?")
