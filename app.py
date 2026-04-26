@@ -8,7 +8,7 @@ from google import genai
 from google.genai import types
 from elevenlabs.client import ElevenLabs
 
-from MotorManual import move_motor
+from MotorManual import move_steps
 
 from DistanceDetection import trash_distance_sensor
 
@@ -120,7 +120,7 @@ def run_trashcan_ai():
 
     if item.bin.upper() == "TRASH":
         say("Trash detected. Opening!")
-        move_motor(STEPS, DIRECTION, DELAY)
+        move_steps(STEPS, DIRECTION, DELAY)
 
         # Wait until the object/person moves away before next loop
         distance_sensor.wait_for_item_removed()
