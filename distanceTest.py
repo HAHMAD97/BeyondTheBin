@@ -3,7 +3,7 @@ from time import sleep
 
 # Define pins
 # echo=17, trigger=25
-sensor = DistanceSensor(echo=17, trigger=25)
+sensor = DistanceSensor(echo=20, trigger=21)
 
 print("Starting distance measurement...")
 

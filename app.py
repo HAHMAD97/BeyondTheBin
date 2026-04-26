@@ -105,6 +105,11 @@ Rules:
 
 # ---------------- MAIN LOOP ----------------
 async def run_trashcan_ai():
+    data, samplerate = sf.read("trashcan_intro.mp3")
+
+    sd.play(data, samplerate)
+    sd.wait()  # waits until playback finishes
+
     # Push blocking sensor read to a thread
     await asyncio.to_thread(distance_sensor.wait_for_item)
 

@@ -3,3 +3,5 @@ google-genai
 pydantic 
 sounddevice 
 google-cloud-speech
+dotenv
+elevenlabs
