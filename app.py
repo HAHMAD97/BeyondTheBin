@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
 import asyncio
 
 from ImageLLM import classify_current_item
@@ -110,6 +111,8 @@ async def run_trashcan_ai():
     sd.play(data, samplerate)
     sd.wait()  # waits until playback finishes
 
+    await say("Place an item in front of me and I'll tell you where it goes!")
+
     # Push blocking sensor read to a thread
     await asyncio.to_thread(distance_sensor.wait_for_item)
 
@@ -125,8 +128,8 @@ async def run_trashcan_ai():
         return
 
     await say("Analysis complete.", wait=False)
-    await say(item.sass, wait=True)
-    await say(f'Bin classification "{item.bin}"', wait=True)
+    await say(item.sass, wait=False)
+    await say(f'Bin classification "{item.bin}"', wait=False)
 
     if item.bin.upper() == "ACCIDENTAL":
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
@@ -143,7 +146,7 @@ async def run_trashcan_ai():
         await asyncio.to_thread(distance_sensor.wait_for_item_removed)
         return
 
-    await say("Do you have anything to say about that?", wait=True)
+    await say("Do you have anything to say about that?", wait=False)
 
     argument_count = 0
 
@@ -159,27 +162,24 @@ async def run_trashcan_ai():
         response = await respond_to_user(item, user_text)
 
         # We wait=True here so it doesn't try to listen to the user while it is still talking
-        await say(response, wait=True)
+        await say(response, wait=False)
 
         if any(word in user_text.lower() for word in ["stop", "fine", "ok", "whatever"]):
-            await say("Conversation terminated. Don't test me again.", wait=True)
+            await say("Conversation terminated. Don't test me again.", wait=False)
             break
 
         argument_count += 1
 
     if argument_count >= MAX_ARGUMENTS:
-        await say("I've repeated myself too many times. I'm done arguing.")
+        await say("I've repeated myself too many times. I'm done arguing.", wait=False)
 
     # Prevent same item from instantly triggering the next loop
     await asyncio.to_thread(distance_sensor.wait_for_item_removed)
 
-    await say("Waiting for item...", tts=False)
 
 
 # ---------------- ENTRY ----------------
 async def main():
-    # Wait=False so it can boot up other tasks if needed while talking
-    await say("Place an item in front of me and I'll tell you where it goes!")
 
     try:
         while True:
