@@ -60,11 +60,11 @@ try:
     # print("Tip: 4096 steps is roughly one full rotation.")
 
     while True:
-        # user_input = input("\nSteps to move: ")
+        user_input = input("\nSteps to move: ")
         
         try:
-            #steps = int(user_input)
-            move_steps(n)
+            steps = int(user_input)
+            move_steps(steps)
         except ValueError:
             print("Please enter a valid whole number (integer).")
 
