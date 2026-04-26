@@ -9,6 +9,9 @@ credentials.json
 *.jpeg
 *.png
 
+# Audio
+*.wav
+
 # Python cache
 __pycache__/
 *.pyc
@@ -18,6 +21,7 @@ __pycache__/
 # Virtual environment
 venv/
 env/
+.venv/
 
 # OS files
 .DS_Store

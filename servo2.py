@@ -11,15 +11,15 @@ servo = Servo(17)
 try:
     while True:
         print("Moving to Min")
-        servo.min()
+        servo.angle(15)
         sleep(2)
         
         print("Moving to Mid")
-        servo.mid()
+        servo.angle(30)
         sleep(2)
         
         print("Moving to Max")
-        servo.max()
+        servo.max(45)
         sleep(2)
 
 except KeyboardInterrupt:
