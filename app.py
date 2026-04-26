@@ -18,7 +18,8 @@ from google.genai import types
 from elevenlabs.client import ElevenLabs
 
 # ---------------- CONFIG ----------------
-MAX_ARGUMENTS = 4
+MAX_SILENCE = 2
+MAX_ARGUMENTS = 2
 MODEL_ID = "gemma-4-26b-a4b-it"
 
 client = genai.Client(api_key=os.getenv("GEMMA_KEY"))
@@ -183,6 +184,11 @@ Rules:
 - If asked "why", explain clearly
 - Do NOT repeat yourself
 - Be short (max 4 sentences)
+
+If the user seems to agree, disengage, or lose interest, end the conversation naturally.
+To end the conversation, your response should include one of these signals:
+        "this is over", "not repeating myself", "end of discussion",
+        "i'm finished", "no more", "enough", "glad we can agree"
 """
     response = await client.aio.models.generate_content(
         model=MODEL_ID,
@@ -192,8 +198,29 @@ Rules:
             max_output_tokens=120,
         ),
     )
-    return response.text
+    
+    return response.text or ""
 
+# ---------------- HELPER FUNCTIONS ----------------
+def user_wants_to_exit(user_text):
+    text = user_text.lower().strip()
+
+    return text in [
+        "ok", "okay", "fine", "whatever",
+        "alright", "i get it", "got it"
+    ]
+
+
+def ai_wants_to_exit(response):
+    r = response.lower()
+
+    exit_signals = [
+        "this is over", "not repeating myself", "end of discussion",
+        "i'm finished", "no more", "enough", "glad we can agree",
+        "i'm done", "we're done", "conversation over"
+    ]
+
+    return any(sig in r for sig in exit_signals)
 
 # ---------------- MAIN LOOP ----------------
 async def run_trashcan_ai():
@@ -238,29 +265,49 @@ async def run_trashcan_ai():
         return
 
     await say("Do you have anything to say about that?")
-
+    
     argument_count = 0
+    silence_count = 0
 
-    while argument_count < MAX_ARGUMENTS:
+    while True:
         user_text = await asyncio.to_thread(listen_once)
 
+        # --- SILENCE HANDLING ---
         if not user_text:
+            silence_count += 1
+
+            if silence_count == 1:
+                await say("...What, no comeback?", tts=False)
+
+            if silence_count >= MAX_SILENCE:
+                await say("Yeah, that's what I thought. Conversation over.")
+                break
+
             continue
+        else:
+            silence_count = 0
 
         print(f"\nUSER: {user_text}")
 
-        response = await respond_to_user(item, user_text)
+        # --- FAST EXIT (NO LLM CALL) ---
+        if user_wants_to_exit(user_text):
+            await say("Yeah yeah. Finally using your brain.")
+            break
 
+        # --- NORMAL FLOW ---
+        response = await respond_to_user(item, user_text)
         await say(response)
 
-        if any(word in user_text.lower() for word in ["stop", "fine", "ok", "whatever"]):
-            await say("Conversation terminated. Don't test me again.")
+        # --- AI DECIDES TO END ---
+        if ai_wants_to_exit(response):
             break
 
         argument_count += 1
 
-    if argument_count >= MAX_ARGUMENTS:
-        await say("I've repeated myself too many times. I'm done arguing.")
+        # --- SAFETY LIMIT ---
+        if argument_count >= MAX_ARGUMENTS:
+            await say("I've repeated myself too many times. I'm done arguing.")
+            break
 
     await asyncio.to_thread(distance_sensor.wait_for_item_removed)
 
