@@ -28,7 +28,7 @@ class WasteResponse(BaseModel):
 def take_photo(filename="current_item.jpg"):
     print("Snapping photo...")
     cap = cv2.VideoCapture(0)
-    for _ in range(5): cap.read()  # Warm up
+    for _ in range(60): cap.read()  # Warm up
     ret, frame = cap.read()
     if ret:
         cv2.imwrite(filename, frame)

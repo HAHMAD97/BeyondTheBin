@@ -35,11 +35,10 @@ distance_sensor = trash_distance_sensor(
     trigger_pin=21,
     target_cm=25,
     tolerance_cm=15,
-    hold_seconds=1.5,
+    hold_seconds=1,
 )
 
-sd.default.latency = 'high'
-sd.default.blocksize = 4096
+sd.default.blocksize = 2048
 
 # ---------------- DATA CLASSES ----------------
 @dataclass
@@ -190,7 +189,7 @@ To end the conversation, your response should include one of these signals:
         "this is over", "not repeating myself", "end of discussion",
         "i'm finished", "no more", "enough", "glad we can agree"
 """
-    response = await client.aio.models.generate_content(
+    response = client.models.generate_content(
         model=MODEL_ID,
         contents=prompt,
         config=types.GenerateContentConfig(
